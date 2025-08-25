@@ -23,15 +23,14 @@ class OllamaAIService:
         logger.info(f"Initialized Ollama AI Service with model: {self.model}")
     
     async def _generate_completion(self, prompt: str, system_prompt: str = "") -> str:
-        """Generate completion using Ollama API with chat endpoint"""
+        """Generate completion using Ollama API with generate endpoint"""
         try:
-            # Use chat format as per Ollama documentation
+            # Combine system and user prompts for generate endpoint
+            full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+            
             payload = {
                 "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system_prompt or "Tu es un assistant IA qui répond uniquement en JSON valide."},
-                    {"role": "user", "content": prompt}
-                ],
+                "prompt": full_prompt,
                 "stream": False,
                 "options": {
                     "temperature": 0.7,
@@ -41,13 +40,13 @@ class OllamaAIService:
             }
             
             response = await self.client.post(
-                f"{self.base_url}/api/chat",
+                f"{self.base_url}/api/generate",
                 json=payload
             )
             response.raise_for_status()
             
             result = response.json()
-            return result.get("message", {}).get("content", "").strip()
+            return result.get("response", "").strip()
             
         except Exception as e:
             logger.error(f"Ollama completion failed: {str(e)}")

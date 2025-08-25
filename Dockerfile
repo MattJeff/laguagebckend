@@ -40,7 +40,7 @@ echo "Ollama is ready!"\n\
 \n\
 # Pull model\n\
 echo "Pulling model..."\n\
-ollama pull llama3.2:3b\n\
+ollama pull qwen2.5:7b\n\
 \n\
 # Start FastAPI\n\
 echo "Starting FastAPI..."\n\
