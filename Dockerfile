@@ -19,28 +19,38 @@ COPY . .
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-echo "Installing Ollama..."\n\
-curl -fsSL https://ollama.ai/install.sh | sh\n\
-\n\
-echo "Starting Ollama server..."\n\
-ollama serve &\n\
-OLLAMA_PID=$!\n\
-\n\
-echo "Waiting for Ollama to be ready..."\n\
-sleep 15\n\
-\n\
-echo "Pulling Llama model (this may take a few minutes)..."\n\
-ollama pull llama3.1:8b || echo "Model pull failed, will retry later"\n\
-\n\
+# Start FastAPI first to pass healthcheck\n\
 echo "Starting FastAPI application..."\n\
-exec uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}\n\
+uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} &\n\
+FASTAPI_PID=$!\n\
+\n\
+# Install and setup Ollama in background\n\
+{\n\
+    echo "Installing Ollama..."\n\
+    curl -fsSL https://ollama.ai/install.sh | sh\n\
+    \n\
+    echo "Starting Ollama server..."\n\
+    ollama serve &\n\
+    OLLAMA_PID=$!\n\
+    \n\
+    echo "Waiting for Ollama to be ready..."\n\
+    sleep 15\n\
+    \n\
+    echo "Pulling Llama model (this may take a few minutes)..."\n\
+    ollama pull llama3.1:8b || echo "Model pull failed, will retry later"\n\
+    \n\
+    echo "Ollama setup complete!"\n\
+} &\n\
+\n\
+# Wait for FastAPI process\n\
+wait $FASTAPI_PID\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose port
 EXPOSE 8000
 
-# Health check with longer startup time
-HEALTHCHECK --interval=30s --timeout=30s --start-period=300s --retries=5 \
+# Health check with shorter startup time since FastAPI starts immediately
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the startup script
