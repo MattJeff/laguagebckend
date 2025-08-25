@@ -2,10 +2,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies + debugging tools
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
+    procps \
+    htop \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies first (for better caching)
@@ -49,10 +51,10 @@ for i in {1..30}; do\n\
     sleep 2\n\
 done\n\
 \n\
-# Pull model in background\n\
+# Pull smaller model in background\n\
 {\n\
-    echo "Pulling Llama model..."\n\
-    ollama pull llama3.1:8b || echo "Model pull failed, will retry later"\n\
+    echo "Pulling Llama 3.2 3B model (lighter)..."\n\
+    ollama pull llama3.2:3b || echo "Model pull failed, will retry later"\n\
     echo "Model setup complete!"\n\
 } &\n\
 \n\
