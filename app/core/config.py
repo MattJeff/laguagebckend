@@ -34,6 +34,14 @@ class Settings(BaseSettings):
     @property
     def use_mlx(self) -> bool:
         """Determine if MLX should be used based on environment and platform"""
+        # Check explicit USE_MLX environment variable first
+        import os
+        use_mlx_env = os.getenv("USE_MLX", "").lower()
+        if use_mlx_env in ["false", "0", "no"]:
+            return False
+        elif use_mlx_env in ["true", "1", "yes"]:
+            return True
+            
         if self.AI_SERVICE == "mlx":
             return True
         elif self.AI_SERVICE == "ollama":
