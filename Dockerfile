@@ -19,13 +19,23 @@ COPY . .
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-# Set default port if PORT env var is not set\n\
-APP_PORT=${PORT:-8000}\n\
-echo "Using port: $APP_PORT"\n\
+# Debug environment variables\n\
+echo "PORT environment variable: [$PORT]"\n\
+echo "All environment variables:"\n\
+env | grep -E "(PORT|RAILWAY)" || echo "No PORT/RAILWAY vars found"\n\
+\n\
+# Set port with explicit handling\n\
+if [ -z "$PORT" ] || [ "$PORT" = "" ]; then\n\
+    APP_PORT=8000\n\
+    echo "PORT not set, using default: 8000"\n\
+else\n\
+    APP_PORT="$PORT"\n\
+    echo "Using PORT from environment: $APP_PORT"\n\
+fi\n\
 \n\
 # Start FastAPI first to pass healthcheck\n\
-echo "Starting FastAPI application..."\n\
-uvicorn main:app --host 0.0.0.0 --port $APP_PORT &\n\
+echo "Starting FastAPI application on port $APP_PORT..."\n\
+uvicorn main:app --host 0.0.0.0 --port "$APP_PORT" &\n\
 FASTAPI_PID=$!\n\
 \n\
 # Install and setup Ollama in background\n\
