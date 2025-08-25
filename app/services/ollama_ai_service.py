@@ -4,11 +4,11 @@ Compatible with Linux servers and Docker containers
 Feature-complete equivalent to MLX AI Service
 """
 
-import httpx
 import json
 import logging
 import re
 from typing import Dict, List, Any, Optional
+from ollama import AsyncClient
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -19,34 +19,34 @@ class OllamaAIService:
     def __init__(self):
         self.base_url = settings.OLLAMA_BASE_URL
         self.model = settings.OLLAMA_MODEL
-        self.client = httpx.AsyncClient(timeout=60.0)
+        self.client = AsyncClient(host=self.base_url)
         logger.info(f"Initialized Ollama AI Service with model: {self.model}")
     
     async def _generate_completion(self, prompt: str, system_prompt: str = "") -> str:
-        """Generate completion using Ollama API with generate endpoint"""
+        """Generate completion using Ollama API with chat endpoint"""
         try:
-            # Combine system and user prompts for generate endpoint
-            full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+            messages = []
+            if system_prompt:
+                messages.append({
+                    "role": "system",
+                    "content": system_prompt
+                })
+            messages.append({
+                "role": "user", 
+                "content": prompt
+            })
             
-            payload = {
-                "model": self.model,
-                "prompt": full_prompt,
-                "stream": False,
-                "options": {
+            response = await self.client.chat(
+                model=self.model,
+                messages=messages,
+                options={
                     "temperature": 0.7,
                     "top_p": 0.9,
                     "num_predict": 2000
                 }
-            }
-            
-            response = await self.client.post(
-                f"{self.base_url}/api/generate",
-                json=payload
             )
-            response.raise_for_status()
             
-            result = response.json()
-            return result.get("response", "").strip()
+            return response['message']['content'].strip()
             
         except Exception as e:
             logger.error(f"Ollama completion failed: {str(e)}")
@@ -636,4 +636,5 @@ Réponds UNIQUEMENT en JSON valide.
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.client.aclose()
+        # AsyncClient from ollama doesn't need explicit closing
+        pass
