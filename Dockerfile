@@ -2,72 +2,56 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies + debugging tools
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
-    procps \
-    htop \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies first (for better caching)
+# Install Ollama using official method
+RUN curl -fsSL https://ollama.ai/install.sh | sh
+
+# Copy requirements and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create startup script that installs Ollama at runtime
+# Create startup script using official Ollama approach
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-# Set port with explicit handling\n\
-if [ -z "$PORT" ] || [ "$PORT" = "" ]; then\n\
-    APP_PORT=8000\n\
-    echo "PORT not set, using default: 8000"\n\
-else\n\
-    APP_PORT="$PORT"\n\
-    echo "Using PORT from environment: $APP_PORT"\n\
-fi\n\
+# Set port\n\
+APP_PORT=${PORT:-8000}\n\
+echo "Starting on port: $APP_PORT"\n\
 \n\
-# Install Ollama first\n\
-echo "Installing Ollama..."\n\
-curl -fsSL https://ollama.ai/install.sh | sh\n\
-\n\
-# Start Ollama server in background\n\
+# Start Ollama server\n\
 echo "Starting Ollama server..."\n\
-nohup ollama serve > /tmp/ollama.log 2>&1 &\n\
+ollama serve &\n\
 OLLAMA_PID=$!\n\
-echo "Ollama PID: $OLLAMA_PID"\n\
 \n\
 # Wait for Ollama to be ready\n\
-echo "Waiting for Ollama to be ready..."\n\
-for i in {1..30}; do\n\
-    if curl -s http://localhost:11434/api/version >/dev/null 2>&1; then\n\
-        echo "Ollama is ready!"\n\
-        break\n\
-    fi\n\
-    echo "Waiting for Ollama... ($i/30)"\n\
-    sleep 2\n\
+echo "Waiting for Ollama..."\n\
+while ! curl -s http://localhost:11434/api/version >/dev/null 2>&1; do\n\
+    sleep 1\n\
 done\n\
+echo "Ollama is ready!"\n\
 \n\
-# Pull smaller model in background\n\
-{\n\
-    echo "Pulling Llama 3.2 3B model (lighter)..."\n\
-    ollama pull llama3.2:3b || echo "Model pull failed, will retry later"\n\
-    echo "Model setup complete!"\n\
-} &\n\
+# Pull model\n\
+echo "Pulling model..."\n\
+ollama pull llama3.2:3b\n\
 \n\
 # Start FastAPI\n\
-echo "Starting FastAPI application on port $APP_PORT..."\n\
+echo "Starting FastAPI..."\n\
 exec uvicorn main:app --host 0.0.0.0 --port "$APP_PORT"\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
-# Expose port
-EXPOSE 8000
+# Expose ports
+EXPOSE 8000 11434
 
-# Health check with shorter startup time since FastAPI starts immediately
-HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the startup script
