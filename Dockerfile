@@ -19,11 +19,6 @@ COPY . .
 RUN echo '#!/bin/bash\n\
 set -e\n\
 \n\
-# Debug environment variables\n\
-echo "PORT environment variable: [$PORT]"\n\
-echo "All environment variables:"\n\
-env | grep -E "(PORT|RAILWAY)" || echo "No PORT/RAILWAY vars found"\n\
-\n\
 # Set port with explicit handling\n\
 if [ -z "$PORT" ] || [ "$PORT" = "" ]; then\n\
     APP_PORT=8000\n\
@@ -33,31 +28,37 @@ else\n\
     echo "Using PORT from environment: $APP_PORT"\n\
 fi\n\
 \n\
-# Start FastAPI first to pass healthcheck\n\
-echo "Starting FastAPI application on port $APP_PORT..."\n\
-uvicorn main:app --host 0.0.0.0 --port "$APP_PORT" &\n\
-FASTAPI_PID=$!\n\
+# Install Ollama first\n\
+echo "Installing Ollama..."\n\
+curl -fsSL https://ollama.ai/install.sh | sh\n\
 \n\
-# Install and setup Ollama in background\n\
+# Start Ollama server in background\n\
+echo "Starting Ollama server..."\n\
+nohup ollama serve > /tmp/ollama.log 2>&1 &\n\
+OLLAMA_PID=$!\n\
+echo "Ollama PID: $OLLAMA_PID"\n\
+\n\
+# Wait for Ollama to be ready\n\
+echo "Waiting for Ollama to be ready..."\n\
+for i in {1..30}; do\n\
+    if curl -s http://localhost:11434/api/version >/dev/null 2>&1; then\n\
+        echo "Ollama is ready!"\n\
+        break\n\
+    fi\n\
+    echo "Waiting for Ollama... ($i/30)"\n\
+    sleep 2\n\
+done\n\
+\n\
+# Pull model in background\n\
 {\n\
-    echo "Installing Ollama..."\n\
-    curl -fsSL https://ollama.ai/install.sh | sh\n\
-    \n\
-    echo "Starting Ollama server..."\n\
-    ollama serve &\n\
-    OLLAMA_PID=$!\n\
-    \n\
-    echo "Waiting for Ollama to be ready..."\n\
-    sleep 15\n\
-    \n\
-    echo "Pulling Llama model (this may take a few minutes)..."\n\
+    echo "Pulling Llama model..."\n\
     ollama pull llama3.1:8b || echo "Model pull failed, will retry later"\n\
-    \n\
-    echo "Ollama setup complete!"\n\
+    echo "Model setup complete!"\n\
 } &\n\
 \n\
-# Wait for FastAPI process\n\
-wait $FASTAPI_PID\n\
+# Start FastAPI\n\
+echo "Starting FastAPI application on port $APP_PORT..."\n\
+exec uvicorn main:app --host 0.0.0.0 --port "$APP_PORT"\n\
 ' > /app/start.sh && chmod +x /app/start.sh
 
 # Expose port
