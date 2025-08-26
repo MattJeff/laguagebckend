@@ -85,23 +85,12 @@ class OllamaAIService:
     
     async def analyze_word(self, word: str, context: str, langue_output: str, user_level: str) -> Dict[str, Any]:
         """Analyze a word with known translation using Ollama"""
-        system_prompt = f"""You are a multilingual language learning assistant. 
-        Analyze the given word in context for a {user_level} level learner.
-        Respond in {langue_output} language.
-        Provide: definition, usage examples, grammar notes, difficulty level."""
+        system_prompt = f"You are a language assistant. Analyze words for {user_level} learners in {langue_output}."
         
-        prompt = f"""
-        Analyze this word: "{word}"
-        Context: "{context}"
-        User level: {user_level}
+        prompt = f"""Word: "{word}" Context: "{context}"
         
-        Provide a detailed analysis in JSON format with:
-        - definition: clear definition
-        - examples: 3 usage examples
-        - grammar: grammatical information
-        - difficulty: difficulty level (1-5)
-        - tips: learning tips
-        """
+        JSON format:
+        {{"definition": "brief definition", "examples": ["example1"], "grammar": "type", "difficulty": 2, "tips": "tip"}}"""
         
         try:
             response = await self._generate_completion(prompt, system_prompt)
