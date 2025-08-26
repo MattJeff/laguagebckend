@@ -75,10 +75,11 @@ async def root():
 
 @app.get("/health")
 async def health_check():
+    service_info = AIServiceFactory.get_service_info()
     return {
         "status": "healthy", 
         "service": "multilingual_ai_backend",
-        "ai_engine": "MLX-LM",
+        "ai_engine": service_info["selected_service"],
         "timestamp": int(time.time())
     }
 
@@ -125,7 +126,7 @@ async def translate_and_analyze_word(request: Request, word_request: WordTransla
 @app.post("/api/v1/flashcards/generate", response_model=FlashcardGenerateResponse)
 @limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
 async def generate_flashcards(request: Request, flashcard_request: FlashcardGenerateRequest):
-    """Generate multilingual flashcards using MLX-LM"""
+    """Generate multilingual flashcards using AI service"""
     try:
         logger.info(f"Generating flashcards for {len(flashcard_request.words)} words")
         words_data = [word.model_dump() for word in flashcard_request.words]
@@ -142,7 +143,7 @@ async def generate_flashcards(request: Request, flashcard_request: FlashcardGene
 @app.post("/api/v1/tests/create", response_model=TestGenerateResponse)
 @limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
 async def create_test(request: Request, test_request: TestGenerateRequest):
-    """Create adaptive test using MLX-LM"""
+    """Create adaptive test using AI service"""
     try:
         logger.info(f"Creating test with {test_request.questionCount} questions")
         result = await ai_service.create_test(
@@ -161,7 +162,7 @@ async def create_test(request: Request, test_request: TestGenerateRequest):
 @app.post("/api/v1/recommendations/get", response_model=RecommendationsResponse)
 @limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
 async def get_recommendations(request: Request, rec_request: RecommendationsRequest):
-    """Get personalized learning recommendations using MLX-LM"""
+    """Get personalized learning recommendations using AI service"""
     try:
         logger.info("Generating personalized recommendations")
         user_progress_dict = rec_request.userProgress.model_dump() if rec_request.userProgress else {}
@@ -178,19 +179,23 @@ async def get_recommendations(request: Request, rec_request: RecommendationsRequ
 
 @app.get("/api/v1/words/health")
 async def words_health():
-    return {"status": "healthy", "service": "word_analysis", "ai_engine": "MLX-LM"}
+    service_info = AIServiceFactory.get_service_info()
+    return {"status": "healthy", "service": "word_analysis", "ai_engine": service_info["selected_service"]}
 
 @app.get("/api/v1/flashcards/health")
 async def flashcards_health():
-    return {"status": "healthy", "service": "flashcard_generation", "ai_engine": "MLX-LM"}
+    service_info = AIServiceFactory.get_service_info()
+    return {"status": "healthy", "service": "flashcard_generation", "ai_engine": service_info["selected_service"]}
 
 @app.get("/api/v1/tests/health")
 async def tests_health():
-    return {"status": "healthy", "service": "test_creation", "ai_engine": "MLX-LM"}
+    service_info = AIServiceFactory.get_service_info()
+    return {"status": "healthy", "service": "test_creation", "ai_engine": service_info["selected_service"]}
 
 @app.get("/api/v1/recommendations/health")
 async def recommendations_health():
-    return {"status": "healthy", "service": "recommendations", "ai_engine": "MLX-LM"}
+    service_info = AIServiceFactory.get_service_info()
+    return {"status": "healthy", "service": "recommendations", "ai_engine": service_info["selected_service"]}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
