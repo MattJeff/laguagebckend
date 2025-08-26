@@ -177,6 +177,15 @@ async def get_recommendations(request: Request, rec_request: RecommendationsRequ
 
 # === HEALTH ENDPOINTS ===
 
+@app.get("/api/v1/test")
+async def test_ollama():
+    """Simple test endpoint for Ollama functionality"""
+    try:
+        result = await ai_service._generate_completion("Say hello in French", "You are a helpful assistant.")
+        return {"status": "success", "response": result}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
+
 @app.get("/api/v1/words/health")
 async def words_health():
     service_info = AIServiceFactory.get_service_info()
