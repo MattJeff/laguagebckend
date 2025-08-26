@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_WINDOW: int = 3600
     
+    # OpenAI Configuration
+    OPENAI_API_KEY: str = "your-openai-api-key-here"
+    
     # CORS Configuration
     ALLOWED_ORIGINS: str = "http://localhost:3000,https://yourdomain.com"
     
@@ -25,7 +28,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     # AI Service Configuration
-    AI_SERVICE: str = "auto"  # auto, mlx, ollama
+    AI_SERVICE: str = "auto"  # auto, mlx, ollama, openai
     
     @property
     def allowed_origins_list(self) -> List[str]:
