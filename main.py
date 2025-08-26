@@ -186,6 +186,17 @@ async def test_ollama():
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
+@app.post("/api/v1/simple-analyze")
+async def simple_analyze(request: dict):
+    """Simplified word analysis without complex JSON parsing"""
+    try:
+        word = request.get("word", "")
+        prompt = f"Translate '{word}' to English and give a brief definition."
+        result = await ai_service._generate_completion(prompt, "You are a translator.")
+        return {"word": word, "analysis": result}
+    except Exception as e:
+        return {"error": str(e)}
+
 @app.get("/api/v1/words/health")
 async def words_health():
     service_info = AIServiceFactory.get_service_info()
