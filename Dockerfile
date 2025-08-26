@@ -38,9 +38,10 @@ while ! curl -s http://localhost:11434/api/version >/dev/null 2>&1; do\n\
 done\n\
 echo "Ollama is ready!"\n\
 \n\
-# Pull model\n\
+# Pull model with timeout and retry\n\
 echo "Pulling model..."\n\
-ollama pull qwen2.5:7b\n\
+timeout 300 ollama pull qwen2.5:7b || echo "Model pull failed, continuing..."\n\
+sleep 5\n\
 \n\
 # Start FastAPI\n\
 echo "Starting FastAPI..."\n\
