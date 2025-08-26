@@ -40,6 +40,7 @@ echo "Ollama is ready!"\n\
 \n\
 # Pull model with timeout and retry\n\
 echo "Pulling model..."\n\
+ollama rm qwen2.5:7b 2>/dev/null || true\n\
 timeout 300 ollama pull llama3.2:3b || echo "Model pull failed, continuing..."\n\
 sleep 5\n\
 \n\
