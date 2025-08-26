@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     OPENAI_API_KEY: str = "your-openai-api-key-here"
     
+    # Groq Configuration (Free API)
+    GROQ_API_KEY: str = "your-groq-api-key-here"
+    
     # CORS Configuration
     ALLOWED_ORIGINS: str = "http://localhost:3000,https://yourdomain.com"
     
@@ -28,7 +31,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     # AI Service Configuration
-    AI_SERVICE: str = "auto"  # auto, mlx, ollama, openai
+    AI_SERVICE: str = "auto"  # auto, mlx, ollama, openai, groq
     
     @property
     def allowed_origins_list(self) -> List[str]:
