@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     
     # AI Service Configuration
-    AI_SERVICE: str = "auto"  # auto, mlx, ollama, openai, groq
+    AI_SERVICE: str = "groq"  # groq, mlx, ollama, openai
     
     @property
     def allowed_origins_list(self) -> List[str]:
