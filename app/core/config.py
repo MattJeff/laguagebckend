@@ -6,7 +6,7 @@ import platform
 class Settings(BaseSettings):
     # Ollama Configuration
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "qwen2.5:7b"
+    OLLAMA_MODEL: str = "llama3.2:3b"
     
     # API Configuration
     API_V1_STR: str = "/api/v1"
