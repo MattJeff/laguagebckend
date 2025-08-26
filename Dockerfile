@@ -41,7 +41,8 @@ echo "Ollama is ready!"\n\
 # Pull model with timeout and retry\n\
 echo "Pulling model..."\n\
 ollama rm qwen2.5:7b 2>/dev/null || true\n\
-timeout 300 ollama pull llama3.2:3b || echo "Model pull failed, continuing..."\n\
+ollama rm llama3.2:3b 2>/dev/null || true\n\
+timeout 180 ollama pull llama3.2:1b || echo "Model pull failed, continuing..."\n\
 sleep 5\n\
 \n\
 # Start FastAPI\n\

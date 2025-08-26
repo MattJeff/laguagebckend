@@ -40,10 +40,10 @@ class OllamaAIService:
                 model=self.model,
                 messages=messages,
                 options={
-                    "temperature": 0.3,
-                    "top_p": 0.8,
-                    "num_predict": 500,
-                    "num_ctx": 2048
+                    "temperature": 0.1,
+                    "top_p": 0.5,
+                    "num_predict": 200,
+                    "num_ctx": 1024
                 }
             )
             
