@@ -86,7 +86,7 @@ async def health_check():
 # === WORD ANALYSIS ENDPOINTS ===
 
 @app.post("/api/v1/words/analyze", response_model=WordAnalysisResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/hour")
 async def analyze_word(request: Request, word_request: WordAnalysisRequest):
     """Analyze a word with known translation"""
     try:
@@ -103,7 +103,7 @@ async def analyze_word(request: Request, word_request: WordAnalysisRequest):
         raise HTTPException(status_code=500, detail=f"Word analysis failed: {str(e)}")
 
 @app.post("/api/v1/words/translate-and-analyze", response_model=WordTranslationResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/hour")
 async def translate_and_analyze_word(request: Request, word_request: WordTranslationRequest):
     """AI auto-translates unknown word and provides complete analysis"""
     try:
@@ -124,7 +124,7 @@ async def translate_and_analyze_word(request: Request, word_request: WordTransla
 # === FLASHCARD GENERATION ===
 
 @app.post("/api/v1/flashcards/generate", response_model=FlashcardGenerateResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/hour")
 async def generate_flashcards(request: Request, flashcard_request: FlashcardGenerateRequest):
     """Generate multilingual flashcards using AI service"""
     try:
@@ -141,7 +141,7 @@ async def generate_flashcards(request: Request, flashcard_request: FlashcardGene
 # === TEST CREATION ===
 
 @app.post("/api/v1/tests/create", response_model=TestGenerateResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/hour")
 async def create_test(request: Request, test_request: TestGenerateRequest):
     """Create adaptive test using AI service"""
     try:
@@ -160,7 +160,7 @@ async def create_test(request: Request, test_request: TestGenerateRequest):
 # === RECOMMENDATIONS ===
 
 @app.post("/api/v1/recommendations/get", response_model=RecommendationsResponse)
-@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/{settings.RATE_LIMIT_WINDOW}")
+@limiter.limit(f"{settings.RATE_LIMIT_REQUESTS}/hour")
 async def get_recommendations(request: Request, rec_request: RecommendationsRequest):
     """Get personalized learning recommendations using AI service"""
     try:
