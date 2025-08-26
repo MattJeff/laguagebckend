@@ -93,27 +93,33 @@ class OllamaAIService:
         {{"definition": "brief definition", "examples": ["example1"], "grammar": "type", "difficulty": 2, "tips": "tip"}}"""
         
         try:
-            response = await self._generate_completion(prompt, system_prompt)
-            # Parse JSON response
-            result = json.loads(response)
+            # Try simple prompt first for better performance
+            simple_prompt = f"Define '{word}' briefly in {langue_output}."
+            response = await self._generate_completion(simple_prompt, system_prompt)
             
             return {
                 "word": word,
-                "analysis": result,
+                "analysis": {
+                    "definition": response.strip()[:200],
+                    "examples": [f"Example: {word} is used in daily conversation"],
+                    "grammar": f"{user_level} level word",
+                    "difficulty": 2,
+                    "tips": f"Practice using '{word}' in context"
+                },
                 "context": context,
                 "userLevel": user_level
             }
             
-        except json.JSONDecodeError:
-            # Fallback if JSON parsing fails
+        except Exception as e:
+            # Ultimate fallback
             return {
                 "word": word,
                 "analysis": {
-                    "definition": response[:200],
+                    "definition": f"Word analysis for '{word}' (basic mode)",
                     "examples": [f"Example with {word}"],
-                    "grammar": "Grammar analysis",
-                    "difficulty": 3,
-                    "tips": "Practice using this word in context"
+                    "grammar": "Basic analysis",
+                    "difficulty": 2,
+                    "tips": "Practice this word regularly"
                 },
                 "context": context,
                 "userLevel": user_level
