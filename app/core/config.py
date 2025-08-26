@@ -47,10 +47,10 @@ class Settings(BaseSettings):
         elif self.AI_SERVICE == "ollama":
             return False
         else:  # auto
-            # Use MLX if on Mac (development) and Apple Silicon available
+            # Use MLX if on Mac (development) and MLX Configuration (can be used on any platform)
             is_mac = platform.system() == "Darwin"
             is_development = self.ENVIRONMENT == "development"
-            return is_mac and is_development
+            return self.USE_MLX and is_development
     
     @property
     def use_ollama(self) -> bool:
