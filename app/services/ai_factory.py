@@ -4,7 +4,18 @@ AI Service Factory - Automatically selects MLX or Ollama based on environment
 
 import logging
 from typing import Union
-from app.services.mlx_ai_service import MLXAIService
+import platform
+
+# Conditional imports to avoid Railway deployment issues
+try:
+    # Only import MLX on Apple Silicon (Darwin)
+    if platform.system() == "Darwin":
+        from app.services.mlx_ai_service import MLXAIService
+    else:
+        MLXAIService = None
+except ImportError:
+    MLXAIService = None
+
 from app.services.ollama_ai_service import OllamaAIService
 from app.services.openai_ai_service import OpenAIService
 from app.services.groq_ai_service import GroqService
@@ -27,6 +38,9 @@ class AIServiceFactory:
             logger.info("Using OpenAI AI Service")
             return OpenAIService()
         elif settings.AI_SERVICE == "mlx":
+            if MLXAIService is None:
+                logger.warning("MLX not available on this platform. Falling back to Groq.")
+                return GroqService()
             logger.info("Using MLX AI Service")
             return MLXAIService()
         elif settings.AI_SERVICE == "ollama":
