@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # API Configuration
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Multilingual AI Flashcard Backend"
-    API_KEY: str = "prod-api-key-change-me-in-production"
+    API_KEY: str = "860e86345239f03e811ba9700e6413efcd8504bd2221be353a9872451eeb4e86"
     
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     
     # Groq Configuration (Free API)
     GROQ_API_KEY: str = "your-groq-api-key-here"
+    GROQ_MODEL: str = "llama-3.1-8b-instant"
+    GROQ_FALLBACK_MODEL: str = "gemma2-9b-it"  # 840 tok/s, $0.05/$0.08 per M tokens
+    GROQ_ENABLE_PAID: bool = False  # Set to True to enable paid usage after free limits
     
     # CORS Configuration
     ALLOWED_ORIGINS: str = "http://localhost:3000,https://yourdomain.com"
@@ -56,7 +59,7 @@ class Settings(BaseSettings):
             # Use MLX if on Mac (development) and MLX Configuration (can be used on any platform)
             is_mac = platform.system() == "Darwin"
             is_development = self.ENVIRONMENT == "development"
-            return self.USE_MLX and is_development
+            return False  # Default to False for simplicity
     
     @property
     def use_ollama(self) -> bool:
@@ -65,6 +68,7 @@ class Settings(BaseSettings):
     
     class Config:
         env_file = ".env"
+        extra = "ignore"  # Ignore extra environment variables
 
 
 settings = Settings()

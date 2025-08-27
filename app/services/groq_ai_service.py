@@ -1,5 +1,5 @@
 """Groq API Service for fast, free AI inference."""
-from typing import Any, Dict
+from typing import Dict, Any, List
 import json
 import httpx
 from app.core.config import settings
@@ -10,8 +10,9 @@ class GroqService:
     
     def __init__(self):
         self.api_key = settings.GROQ_API_KEY
+        self.model = settings.GROQ_MODEL
+        self.fallback_model = settings.GROQ_FALLBACK_MODEL
         self.base_url = "https://api.groq.com/openai/v1"
-        self.model = "llama-3.1-8b-instant"  # Fast and free
     
     async def _generate_completion(self, prompt: str, system_prompt: str = "") -> str:
         """Generate completion using Groq API"""

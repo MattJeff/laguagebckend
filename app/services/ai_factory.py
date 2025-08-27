@@ -17,29 +17,27 @@ class AIServiceFactory:
     
     @staticmethod
     def create_ai_service() -> Union["MLXAIService", "OllamaAIService", "OpenAIService", "GroqService"]:
-        """Create AI service based on configuration and environment"""
+        """Factory method to create appropriate AI service based on configuration"""
+        logger.info(f"Creating AI service with mode: {settings.AI_SERVICE}")
         
-        # Default to Groq for reliability and speed
-        if settings.AI_SERVICE == "groq" or settings.AI_SERVICE == "auto":
-            logger.info("Using Groq API Service (Free & Fast)")
+        if settings.AI_SERVICE == "groq":
+            logger.info("Using Groq AI Service")
             return GroqService()
         elif settings.AI_SERVICE == "openai":
-            logger.info("Using OpenAI API Service")
+            logger.info("Using OpenAI AI Service")
             return OpenAIService()
         elif settings.AI_SERVICE == "mlx":
-            logger.info("Using MLX AI Service (Apple Silicon)")
-            try:
-                from app.services.mlx_ai_service import MLXAIService
-                return MLXAIService()
-            except Exception as e:
-                logger.warning(f"MLX initialization failed: {e}. Using Groq.")
-                return GroqService()
+            logger.info("Using MLX AI Service")
+            return MLXAIService()
         elif settings.AI_SERVICE == "ollama":
-            logger.info("Using Ollama AI Service")
+            logger.info("Attempting Ollama AI Service")
             try:
-                return OllamaAIService()
+                service = OllamaAIService()
+                logger.info("Ollama AI Service initialized successfully")
+                return service
             except Exception as e:
-                logger.warning(f"Ollama initialization failed: {e}. Using Groq.")
+                logger.warning(f"Ollama failed: {e}. Switching to Groq.")
+                logger.info("Using Groq AI Service as fallback")
                 return GroqService()
         else:
             logger.info("Unknown AI service, defaulting to Groq")
