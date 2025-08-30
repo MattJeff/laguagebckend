@@ -244,19 +244,22 @@ Types disponibles: {', '.join(available_types)}
 MOTS À TRAITER:
 {words_list}
 
-Produis un objet JSON conforme au schéma suivant:
+IMPORTANT: Tous les champs doivent avoir des valeurs STRING valides, JAMAIS null ou vide.
 
-SCHÉMA:
+SCHÉMA OBLIGATOIRE:
 {json.dumps(schema, indent=2, ensure_ascii=False)}
 
-RÈGLES:
+RÈGLES STRICTES:
 - Varie les types de cartes (classic, contextual)
 - Adapte la difficulté au niveau {user_level}
-- Fournis 4 options pour les QCM
-- Inclus des indices utiles
-- Explique pourquoi la réponse est correcte
+- Fournis EXACTEMENT 4 options STRING pour chaque carte
+- answer DOIT être une STRING non-vide
+- options DOIT être un array de 4 STRING non-vides
+- Inclus des indices utiles (array de STRING)
+- Explique pourquoi la réponse est correcte (STRING)
+- AUCUN champ ne peut être null, undefined ou vide
 
-Ne retourne AUCUN autre texte que le JSON.
+RETOURNE UNIQUEMENT LE JSON VALIDE, RIEN D'AUTRE.
 """
         
         try:
