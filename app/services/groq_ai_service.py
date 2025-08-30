@@ -257,55 +257,72 @@ Ne retourne AUCUN autre texte que le JSON.
             }
         }
         
-        prompt = f"""
-Génère {target_count} flashcards pour l'apprentissage {source_lang} → {target_lang}.
+        # Determine which type to generate
+        card_type = available_types[0] if len(available_types) == 1 else "classic"
+        
+        if card_type == "contextual":
+            prompt = f"""
+Génère {target_count} flashcards CONTEXTUAL pour l'apprentissage {source_lang} → {target_lang}.
 Niveau utilisateur: {user_level}
-Types disponibles: {', '.join(available_types)}
 
 MOTS À TRAITER:
 {words_list}
 
-TYPES DE CARTES:
-1. CLASSIC: QCM simple traduction/définition
-   - Question: "Que signifie 'word' en français ?"
-   - Answer: "mot"
-   - Options: ["mot", "livre", "page", "texte"]
+TYPE: CONTEXTUAL UNIQUEMENT - Complétion de phrase
+- Question: "Complete the sentence: 'phrase avec _____'"
+- OBLIGATOIRE: La question DOIT contenir _____ à la place du mot cible
+- Answer: le mot anglais original
+- Options: [mot correct, distracteur1, distracteur2, distracteur3] TOUS EN ANGLAIS
+- type: "contextual"
+- questionLanguage: "en"
+- answerLanguage: "en"
+- contextTranslation: traduction française de la phrase complète
 
-2. CONTEXTUAL: Complétion de phrase avec contexte
-   - Question: "Complete the sentence: 'The movie was _____'"
-   - OBLIGATOIRE: La question DOIT contenir _____ à la place du mot cible
-   - Answer: le mot anglais original (ex: "brainless")
-   - Options: [mot correct, distracteur1, distracteur2, distracteur3] TOUS EN ANGLAIS
-   - questionLanguage: "en", answerLanguage: "en"
-   - contextTranslation: traduction française de la phrase complète
-   - Hints: ["Regardez le contexte", "Quel mot complète logiquement la phrase ?"]
-
-EXEMPLES CONTEXTUAL:
+EXEMPLES:
 Question: "Complete the sentence: 'I couldn't see her _____ in the crowd'"
 Answer: "face"
+Options: ["face", "hand", "voice", "smile"]
 contextTranslation: "Je ne pouvais pas voir son visage dans la foule"
 
-IMPORTANT: Tous les champs doivent avoir des valeurs STRING valides, JAMAIS null ou vide.
-
-SCHÉMA OBLIGATOIRE:
+SCHÉMA:
 {json.dumps(schema, indent=2, ensure_ascii=False)}
 
-RÈGLES STRICTES:
-- Si types=["classic"] → TOUTES les cartes type="classic"
-- Si types=["contextual"] → TOUTES les cartes type="contextual" 
-- Si types=["classic","contextual"] → Mélange 50/50
-- Adapte difficulté au niveau {user_level}
-- CLASSIC: traduction directe, définitions simples
-- CONTEXTUAL: OBLIGATOIRE format "Complete the sentence: 'phrase avec _____'"
-- CONTEXTUAL: answer en langue originale, questionLanguage="en", answerLanguage="en"
-- Fournis EXACTEMENT 4 options STRING distinctes
-- answer DOIT être une STRING non-vide
-- options DOIT être un array de 4 STRING non-vides
-- hints DOIT être un array de 2-3 STRING utiles
-- explanation DOIT expliquer pourquoi c'est correct
-- AUCUN champ ne peut être null, undefined ou vide
+RÈGLES:
+- TOUTES les cartes type="contextual"
+- Questions avec _____ OBLIGATOIRE
+- Answer en anglais
+- questionLanguage="en", answerLanguage="en"
+- Aucun champ null
 
-RETOURNE UNIQUEMENT LE JSON VALIDE, RIEN D'AUTRE.
+RETOURNE UNIQUEMENT LE JSON VALIDE.
+"""
+        else:
+            prompt = f"""
+Génère {target_count} flashcards CLASSIC pour l'apprentissage {source_lang} → {target_lang}.
+Niveau utilisateur: {user_level}
+
+MOTS À TRAITER:
+{words_list}
+
+TYPE: CLASSIC UNIQUEMENT - Traduction simple
+- Question: "Que signifie 'word' en français ?"
+- Answer: traduction française
+- Options: [traduction correcte, distracteur1, distracteur2, distracteur3]
+- type: "classic"
+- questionLanguage: "en"
+- answerLanguage: "fr"
+
+SCHÉMA:
+{json.dumps(schema, indent=2, ensure_ascii=False)}
+
+RÈGLES:
+- TOUTES les cartes type="classic"
+- Questions de traduction directe
+- Answer en français
+- questionLanguage="en", answerLanguage="fr"
+- Aucun champ null
+
+RETOURNE UNIQUEMENT LE JSON VALIDE.
 """
         
         try:
