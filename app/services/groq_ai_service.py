@@ -262,6 +262,29 @@ Ne retourne AUCUN autre texte que le JSON.
         try:
             response = await self._generate_completion(prompt, "")
             result = json.loads(response)
+            
+            # Validate and fix None values in cards
+            if "cards" in result:
+                for card in result["cards"]:
+                    # Fix None answer
+                    if card.get("answer") is None:
+                        word_text = card.get("wordId", "").replace("word_", "")
+                        card["answer"] = f"Réponse pour {word_text}"
+                    
+                    # Fix None options
+                    if card.get("options") is None or not card.get("options"):
+                        card["options"] = [
+                            card["answer"],
+                            "Option incorrecte 1",
+                            "Option incorrecte 2", 
+                            "Option incorrecte 3"
+                        ]
+                    else:
+                        # Fix individual None values in options
+                        for i, option in enumerate(card["options"]):
+                            if option is None:
+                                card["options"][i] = f"Option {i+1}"
+            
             return result
         except Exception as e:
             # Fallback response matching MLX format
