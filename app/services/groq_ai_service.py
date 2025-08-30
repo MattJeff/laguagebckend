@@ -244,19 +244,33 @@ Types disponibles: {', '.join(available_types)}
 MOTS À TRAITER:
 {words_list}
 
+TYPES DE CARTES:
+1. CLASSIC: QCM simple traduction/définition
+   - Question: "Que signifie 'word' en français ?"
+   - Answer: "mot"
+   - Options: ["mot", "livre", "page", "texte"]
+
+2. CONTEXTUAL: Utilise le contexte d'usage
+   - Question: "Dans 'I read a book', que signifie 'read' ?"
+   - Answer: "lire"
+   - Options: ["lire", "écrire", "parler", "écouter"]
+   - Hints: ["Regardez le contexte avec 'book'", "Action qu'on fait avec un livre"]
+
 IMPORTANT: Tous les champs doivent avoir des valeurs STRING valides, JAMAIS null ou vide.
 
 SCHÉMA OBLIGATOIRE:
 {json.dumps(schema, indent=2, ensure_ascii=False)}
 
 RÈGLES STRICTES:
-- Varie les types de cartes (classic, contextual)
-- Adapte la difficulté au niveau {user_level}
-- Fournis EXACTEMENT 4 options STRING pour chaque carte
+- Mélange types classic (50%) et contextual (50%)
+- Adapte difficulté au niveau {user_level}
+- CLASSIC: traduction directe, définitions simples
+- CONTEXTUAL: utilise le contexte fourni, explique l'usage
+- Fournis EXACTEMENT 4 options STRING distinctes
 - answer DOIT être une STRING non-vide
 - options DOIT être un array de 4 STRING non-vides
-- Inclus des indices utiles (array de STRING)
-- Explique pourquoi la réponse est correcte (STRING)
+- hints DOIT être un array de 2-3 STRING utiles
+- explanation DOIT expliquer pourquoi c'est correct
 - AUCUN champ ne peut être null, undefined ou vide
 
 RETOURNE UNIQUEMENT LE JSON VALIDE, RIEN D'AUTRE.
