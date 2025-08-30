@@ -554,3 +554,4 @@ CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 - Outils d'évaluation automatisés
 - Génération de contenu pédagogique
 - Suivi des progrès d'apprentissage
+# Force Railway redeploy
