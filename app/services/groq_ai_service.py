@@ -264,26 +264,48 @@ Ne retourne AUCUN autre texte que le JSON.
             result = json.loads(response)
             
             # Validate and fix None values in cards
-            if "cards" in result:
-                for card in result["cards"]:
+            if "cards" in result and isinstance(result["cards"], list):
+                for i, card in enumerate(result["cards"]):
+                    if not isinstance(card, dict):
+                        continue
+                        
                     # Fix None answer
-                    if card.get("answer") is None:
-                        word_text = card.get("wordId", "").replace("word_", "")
-                        card["answer"] = f"Réponse pour {word_text}"
+                    if card.get("answer") is None or card.get("answer") == "":
+                        word_text = card.get("wordId", f"word_{i+1}").replace("word_", "")
+                        card["answer"] = f"Réponse pour {word_text}" if word_text else f"Réponse {i+1}"
+                    
+                    # Fix None question
+                    if card.get("question") is None or card.get("question") == "":
+                        word_text = card.get("wordId", f"word_{i+1}").replace("word_", "")
+                        card["question"] = f"Que signifie '{word_text}' ?" if word_text else f"Question {i+1}"
                     
                     # Fix None options
-                    if card.get("options") is None or not card.get("options"):
+                    if card.get("options") is None or not isinstance(card.get("options"), list) or len(card.get("options", [])) == 0:
                         card["options"] = [
-                            card["answer"],
+                            card.get("answer", f"Réponse {i+1}"),
                             "Option incorrecte 1",
                             "Option incorrecte 2", 
                             "Option incorrecte 3"
                         ]
                     else:
-                        # Fix individual None values in options
-                        for i, option in enumerate(card["options"]):
-                            if option is None:
-                                card["options"][i] = f"Option {i+1}"
+                        # Fix individual None values in options and ensure 4 options
+                        options = card["options"]
+                        for j in range(len(options)):
+                            if options[j] is None or options[j] == "":
+                                options[j] = f"Option {j+1}"
+                        
+                        # Ensure we have exactly 4 options
+                        while len(options) < 4:
+                            options.append(f"Option {len(options)+1}")
+                        card["options"] = options[:4]  # Limit to 4 options
+                    
+                    # Fix other None values
+                    if card.get("hints") is None:
+                        card["hints"] = [f"Indice pour carte {i+1}"]
+                    if card.get("explanation") is None:
+                        card["explanation"] = f"Explication pour carte {i+1}"
+                    if card.get("difficulty") is None:
+                        card["difficulty"] = "easy"
             
             return result
         except Exception as e:
