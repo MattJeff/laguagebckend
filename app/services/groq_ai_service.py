@@ -226,7 +226,7 @@ Ne retourne AUCUN autre texte que le JSON.
         target_lang = session_config.get('targetLanguage', 'fr')
         
         words_list = "\n".join([
-            f"- {w['text']}: {w.get('translation', 'N/A')} (maîtrise: {w.get('masteryLevel', 'NEW')})"
+            f"- {w['text']}: {w.get('translation') or 'À traduire'} (maîtrise: {w.get('masteryLevel', 'NEW')})"
             for w in selected_words
         ])
         
@@ -421,9 +421,9 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
                         "type": "classic",
                         "subType": "translation_to_native",
                         "question": f"Que signifie '{word['text']}' ?",
-                        "answer": word.get('translation', f"Traduction de {word['text']}"),
+                        "answer": word.get('translation') or f"Traduction de {word['text']}",
                         "options": [
-                            word.get('translation', f"Traduction de {word['text']}"),
+                            word.get('translation') or f"Traduction de {word['text']}",
                             "Option incorrecte 1",
                             "Option incorrecte 2", 
                             "Option incorrecte 3"
