@@ -250,11 +250,19 @@ TYPES DE CARTES:
    - Answer: "mot"
    - Options: ["mot", "livre", "page", "texte"]
 
-2. CONTEXTUAL: Utilise le contexte d'usage
-   - Question: "Dans 'I read a book', que signifie 'read' ?"
-   - Answer: "lire"
-   - Options: ["lire", "écrire", "parler", "écouter"]
-   - Hints: ["Regardez le contexte avec 'book'", "Action qu'on fait avec un livre"]
+2. CONTEXTUAL: Complétion de phrase avec contexte
+   - Question: "Complete the sentence: 'The movie was _____'"
+   - OBLIGATOIRE: La question DOIT contenir _____ à la place du mot cible
+   - Answer: le mot anglais original (ex: "brainless")
+   - Options: [mot correct, distracteur1, distracteur2, distracteur3] TOUS EN ANGLAIS
+   - questionLanguage: "en", answerLanguage: "en"
+   - contextTranslation: traduction française de la phrase complète
+   - Hints: ["Regardez le contexte", "Quel mot complète logiquement la phrase ?"]
+
+EXEMPLES CONTEXTUAL:
+Question: "Complete the sentence: 'I couldn't see her _____ in the crowd'"
+Answer: "face"
+contextTranslation: "Je ne pouvais pas voir son visage dans la foule"
 
 IMPORTANT: Tous les champs doivent avoir des valeurs STRING valides, JAMAIS null ou vide.
 
