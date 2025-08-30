@@ -355,6 +355,16 @@ RETOURNE UNIQUEMENT LE JSON VALIDE, RIEN D'AUTRE.
                         card["explanation"] = f"Explication pour carte {i+1}"
                     if card.get("difficulty") is None:
                         card["difficulty"] = "easy"
+                    
+                    # Force contextual type if requested
+                    if "contextual" in available_types and len(available_types) == 1:
+                        card["type"] = "contextual"
+                        if not ("_____" in card.get("question", "")):
+                            word_text = card.get("wordId", f"word_{i+1}").replace("word_", "")
+                            card["question"] = f"Complete the sentence: 'The {word_text} was _____'"
+                            card["answer"] = word_text
+                            card["questionLanguage"] = "en"
+                            card["answerLanguage"] = "en"
             
             return result
         except Exception as e:
