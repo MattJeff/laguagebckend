@@ -60,7 +60,7 @@ async def root():
     service_info = AIServiceFactory.get_service_info()
     return {
         "message": "Multilingual AI Flashcard Backend", 
-        "version": "2.0.0",
+        "version": "2.1.0",
         "ai_engine": service_info["selected_service"],
         "environment": service_info["environment"],
         "model": service_info["model"],
