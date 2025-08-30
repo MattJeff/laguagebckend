@@ -390,27 +390,52 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
             fallback_cards = []
             
             for i, word in enumerate(selected_words):
-                card = {
-                    "id": f"card_{i+1}",
-                    "wordId": f"word_{word['text'].lower()}",
-                    "type": "classic",
-                    "subType": "translation_to_native",
-                    "question": f"Que signifie '{word['text']}' ?",
-                    "answer": word.get('translation', f"Traduction de {word['text']}"),
-                    "options": [
-                        word.get('translation', f"Traduction de {word['text']}"),
-                        "Option incorrecte 1",
-                        "Option incorrecte 2", 
-                        "Option incorrecte 3"
-                    ],
-                    "hints": [f"Indice pour {word['text']}"],
-                    "explanation": f"Explication pour {word['text']}",
-                    "difficulty": "easy",
-                    "timeLimit": 15000,
-                    "points": 10,
-                    "questionLanguage": source_lang,
-                    "answerLanguage": target_lang
-                }
+                # Determine card type for fallback
+                if "contextual" in available_types and len(available_types) == 1:
+                    card = {
+                        "id": f"card_{i+1}",
+                        "wordId": f"word_{word['text'].lower()}",
+                        "type": "contextual",
+                        "subType": "fill_in_blank",
+                        "question": f"Complete the sentence: 'The {word['text']} was _____'",
+                        "answer": word['text'],
+                        "options": [
+                            word['text'],
+                            "Option incorrecte 1",
+                            "Option incorrecte 2", 
+                            "Option incorrecte 3"
+                        ],
+                        "hints": [f"Think about the context", f"What word fits logically?"],
+                        "explanation": f"The word '{word['text']}' completes this sentence naturally.",
+                        "difficulty": "easy",
+                        "timeLimit": 15000,
+                        "points": 10,
+                        "questionLanguage": "en",
+                        "answerLanguage": "en",
+                        "contextTranslation": f"La phrase complète traduite avec {word.get('translation', word['text'])}"
+                    }
+                else:
+                    card = {
+                        "id": f"card_{i+1}",
+                        "wordId": f"word_{word['text'].lower()}",
+                        "type": "classic",
+                        "subType": "translation_to_native",
+                        "question": f"Que signifie '{word['text']}' ?",
+                        "answer": word.get('translation', f"Traduction de {word['text']}"),
+                        "options": [
+                            word.get('translation', f"Traduction de {word['text']}"),
+                            "Option incorrecte 1",
+                            "Option incorrecte 2", 
+                            "Option incorrecte 3"
+                        ],
+                        "hints": [f"Indice pour {word['text']}"],
+                        "explanation": f"Explication pour {word['text']}",
+                        "difficulty": "easy",
+                        "timeLimit": 15000,
+                        "points": 10,
+                        "questionLanguage": source_lang,
+                        "answerLanguage": target_lang
+                    }
                 fallback_cards.append(card)
             
             return {
