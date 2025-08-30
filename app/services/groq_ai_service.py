@@ -291,10 +291,13 @@ SCHÉMA OBLIGATOIRE:
 {json.dumps(schema, indent=2, ensure_ascii=False)}
 
 RÈGLES STRICTES:
-- Mélange types classic (50%) et contextual (50%)
+- Si types=["classic"] → TOUTES les cartes type="classic"
+- Si types=["contextual"] → TOUTES les cartes type="contextual" 
+- Si types=["classic","contextual"] → Mélange 50/50
 - Adapte difficulté au niveau {user_level}
 - CLASSIC: traduction directe, définitions simples
-- CONTEXTUAL: utilise le contexte fourni, explique l'usage
+- CONTEXTUAL: OBLIGATOIRE format "Complete the sentence: 'phrase avec _____'"
+- CONTEXTUAL: answer en langue originale, questionLanguage="en", answerLanguage="en"
 - Fournis EXACTEMENT 4 options STRING distinctes
 - answer DOIT être une STRING non-vide
 - options DOIT être un array de 4 STRING non-vides
