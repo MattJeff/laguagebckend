@@ -160,6 +160,27 @@ Ne retourne AUCUN autre texte que le JSON.
         try:
             response = await self._generate_completion(prompt, "")
             result = json.loads(response)
+            
+            # Validate and fix None values
+            if result.get("word") is None:
+                result["word"] = word
+            if result.get("translation") is None:
+                result["translation"] = f"Traduction de {word}"
+            if result.get("definition") is None:
+                result["definition"] = f"Définition de {word}"
+            if result.get("difficulty") is None:
+                result["difficulty"] = user_level or "A2"
+            if result.get("cefr_level") is None:
+                result["cefr_level"] = user_level or "A2"
+            
+            # Fix nested objects
+            if result.get("contextAnalysis") is None:
+                result["contextAnalysis"] = {}
+            if result.get("learningData") is None:
+                result["learningData"] = {}
+            if result.get("flashcardSuggestion") is None:
+                result["flashcardSuggestion"] = {}
+            
             return result
         except Exception as e:
             # Fallback response
