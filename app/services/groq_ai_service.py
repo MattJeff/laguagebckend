@@ -352,7 +352,9 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
 """
         
         try:
+            print(f"[DEBUG] Sending prompt to Groq: {prompt[:200]}...")
             response = await self._generate_completion(prompt, "")
+            print(f"[DEBUG] Groq response: {response[:500]}...")
             result = json.loads(response)
             
             # Validate and fix None values in cards
@@ -411,6 +413,7 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
             
             return result
         except Exception as e:
+            print(f"[ERROR] Groq failed: {str(e)}")
             # Fallback response matching MLX format
             import uuid
             fallback_cards = []
