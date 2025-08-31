@@ -243,6 +243,28 @@ Ne retourne AUCUN autre texte que le JSON.
             ["aller", "voir", "manger", "parler"]
         ]
         return distractors[index-1][hash(word) % 4]
+    
+    def _fix_json_syntax(self, json_str: str) -> str:
+        """Fix common JSON syntax errors from Groq responses"""
+        import re
+        
+        # Remove trailing commas before closing brackets/braces
+        json_str = re.sub(r',(\s*[}\]])', r'\1', json_str)
+        
+        # Fix missing commas between objects in arrays
+        json_str = re.sub(r'}\s*{', r'},{', json_str)
+        
+        # Fix missing commas between array elements
+        json_str = re.sub(r']\s*\[', r'],[', json_str)
+        
+        # Fix missing commas after closing braces/brackets when followed by quotes
+        json_str = re.sub(r'}\s*"', r'},"', json_str)
+        json_str = re.sub(r']\s*"', r'],"', json_str)
+        
+        # Fix missing commas after string values when followed by quotes
+        json_str = re.sub(r'"\s*"([^"]*)":', r'","\1":', json_str)
+        
+        return json_str
 
     async def generate_flashcards(self, words_data: List[Dict], session_config: Dict[str, Any]) -> Dict[str, Any]:
         """Generate flashcards using Groq with same interface as MLX"""
@@ -382,6 +404,9 @@ RETOURNE UNIQUEMENT LE JSON VALIDE SANS AUCUN TEXTE EXPLICATIF AVANT OU APRÈS.
                 end = response_clean.rfind('}') + 1
                 if start != -1 and end > start:
                     response_clean = response_clean[start:end]
+            
+            # Fix common JSON syntax errors
+            response_clean = self._fix_json_syntax(response_clean)
             
             print(f"[DEBUG] Cleaned JSON: {response_clean}")
             result = json.loads(response_clean)
