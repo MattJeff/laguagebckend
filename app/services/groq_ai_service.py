@@ -212,6 +212,32 @@ Ne retourne AUCUN autre texte que le JSON.
                 }
             }
     
+    def _get_basic_translation(self, word: str) -> str:
+        """Basic translations for common words"""
+        translations = {
+            "she": "elle", "he": "il", "you": "tu/vous", "I": "je", "we": "nous", "they": "ils/elles",
+            "hello": "bonjour", "goodbye": "au revoir", "yes": "oui", "no": "non", "please": "s'il vous plaît",
+            "thank": "merci", "sorry": "désolé", "house": "maison", "car": "voiture", "book": "livre",
+            "water": "eau", "food": "nourriture", "time": "temps", "day": "jour", "night": "nuit",
+            "good": "bon", "bad": "mauvais", "big": "grand", "small": "petit", "new": "nouveau",
+            "old": "vieux", "hot": "chaud", "cold": "froid", "happy": "heureux", "sad": "triste",
+            "love": "amour", "hate": "haine", "work": "travail", "play": "jouer", "eat": "manger",
+            "drink": "boire", "sleep": "dormir", "walk": "marcher", "run": "courir", "stop": "arrêter",
+            "go": "aller", "come": "venir", "see": "voir", "hear": "entendre", "speak": "parler",
+            "duet": "duo", "courthouse": "tribunal", "grunting": "grognement"
+        }
+        return translations.get(word.lower(), f"traduction de {word}")
+    
+    def _get_distractor_option(self, word: str, index: int) -> str:
+        """Generate realistic distractor options"""
+        distractors = [
+            ["famille", "ami", "maison", "temps"],
+            ["bonjour", "merci", "eau", "livre"], 
+            ["grand", "petit", "bon", "nouveau"],
+            ["aller", "voir", "manger", "parler"]
+        ]
+        return distractors[index-1][hash(word) % 4]
+
     async def generate_flashcards(self, words_data: List[Dict], session_config: Dict[str, Any]) -> Dict[str, Any]:
         """Generate flashcards using Groq with same interface as MLX"""
         
@@ -421,12 +447,12 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
                         "type": "classic",
                         "subType": "translation_to_native",
                         "question": f"Que signifie '{word['text']}' ?",
-                        "answer": word.get('translation') or f"Traduction de {word['text']}",
+                        "answer": word.get('translation') or self._get_basic_translation(word['text']),
                         "options": [
-                            word.get('translation') or f"Traduction de {word['text']}",
-                            "Option incorrecte 1",
-                            "Option incorrecte 2", 
-                            "Option incorrecte 3"
+                            word.get('translation') or self._get_basic_translation(word['text']),
+                            self._get_distractor_option(word['text'], 1),
+                            self._get_distractor_option(word['text'], 2), 
+                            self._get_distractor_option(word['text'], 3)
                         ],
                         "hints": [f"Indice pour {word['text']}"],
                         "explanation": f"Explication pour {word['text']}",
