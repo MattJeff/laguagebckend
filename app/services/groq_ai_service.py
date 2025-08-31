@@ -304,69 +304,77 @@ Ne retourne AUCUN autre texte que le JSON.
         """Rebuild JSON structure from scrambled Groq response"""
         import re
         
-        # Extract all key-value pairs
+        # Extract session ID
         session_id_match = re.search(r'"sessionId":\s*"([^"]*)"', json_str)
-        
-        # Extract cards array content
-        cards_start = json_str.find('"cards"')
-        if cards_start == -1:
-            return json_str
-            
-        # Find the opening bracket for cards array
-        bracket_start = json_str.find('[', cards_start)
-        if bracket_start == -1:
-            return json_str
-            
-        # Find all card objects
-        card_objects = []
-        current_pos = bracket_start + 1
-        brace_count = 0
-        current_card = ""
-        
-        for i, char in enumerate(json_str[current_pos:], current_pos):
-            if char == '{':
-                if brace_count == 0:
-                    current_card = char
-                else:
-                    current_card += char
-                brace_count += 1
-            elif char == '}':
-                current_card += char
-                brace_count -= 1
-                if brace_count == 0:
-                    card_objects.append(current_card)
-                    current_card = ""
-            elif brace_count > 0:
-                current_card += char
-            elif char == ']':
-                break
-        
-        # Rebuild the JSON structure
         session_id = session_id_match.group(1) if session_id_match else "session_generated"
+        
+        # Extract individual card properties using regex
+        cards = []
+        
+        # Find all card IDs to determine how many cards we have
+        card_ids = re.findall(r'"id":\s*"(card_\d+)"', json_str)
+        
+        for card_id in card_ids:
+            card = {"id": card_id}
+            
+            # Extract properties for this card by finding patterns near the card ID
+            # This is a more robust approach for scrambled JSON
+            
+            # Find wordId
+            wordid_pattern = rf'(?:.*{re.escape(card_id)}.*?"wordId":\s*"([^"]*)")|(?:"wordId":\s*"([^"]*)".*?{re.escape(card_id)})'
+            wordid_match = re.search(wordid_pattern, json_str, re.DOTALL)
+            if wordid_match:
+                card["wordId"] = wordid_match.group(1) or wordid_match.group(2)
+            
+            # Extract question
+            question_pattern = rf'(?:.*{re.escape(card_id)}.*?"question":\s*"([^"]*)")|(?:"question":\s*"([^"]*)".*?{re.escape(card_id)})'
+            question_match = re.search(question_pattern, json_str, re.DOTALL)
+            if question_match:
+                card["question"] = question_match.group(1) or question_match.group(2)
+            
+            # Extract answer
+            answer_pattern = rf'(?:.*{re.escape(card_id)}.*?"answer":\s*"([^"]*)")|(?:"answer":\s*"([^"]*)".*?{re.escape(card_id)})'
+            answer_match = re.search(answer_pattern, json_str, re.DOTALL)
+            if answer_match:
+                card["answer"] = answer_match.group(1) or answer_match.group(2)
+            
+            # Extract options array
+            options_pattern = rf'(?:.*{re.escape(card_id)}.*?"options":\s*\[([^\]]*)\])|(?:"options":\s*\[([^\]]*)\].*?{re.escape(card_id)})'
+            options_match = re.search(options_pattern, json_str, re.DOTALL)
+            if options_match:
+                options_str = options_match.group(1) or options_match.group(2)
+                # Parse options
+                options = re.findall(r'"([^"]*)"', options_str)
+                card["options"] = options[:4]  # Limit to 4 options
+            
+            # Set default values
+            card.setdefault("type", "contextual")
+            card.setdefault("subType", "fill_in_blank")
+            card.setdefault("hints", [])
+            card.setdefault("explanation", "")
+            card.setdefault("difficulty", "medium")
+            card.setdefault("timeLimit", 15000)
+            card.setdefault("points", 10)
+            card.setdefault("questionLanguage", "en")
+            card.setdefault("answerLanguage", "en")
+            card.setdefault("contextTranslation", "")
+            
+            # Only add card if it has essential fields
+            if "question" in card and "answer" in card:
+                cards.append(card)
+                print(f"[DEBUG] Rebuilt card: {card['id']} - {card.get('question', 'No question')[:50]}...")
         
         rebuilt_json = {
             "sessionId": session_id,
-            "cards": [],
+            "cards": cards,
             "metadata": {
-                "totalCards": len(card_objects),
-                "estimatedTime": len(card_objects) * 15,
-                "difficultyMix": {"easy": len(card_objects), "medium": 0, "hard": 0}
+                "totalCards": len(cards),
+                "estimatedTime": len(cards) * 15,
+                "difficultyMix": {"easy": len(cards), "medium": 0, "hard": 0}
             }
         }
         
-        # Parse each card object
-        for card_str in card_objects:
-            try:
-                # Fix the card JSON
-                card_str = self._fix_json_syntax(card_str)
-                print(f"[DEBUG] Trying to parse card: {card_str}")
-                card = json.loads(card_str)
-                rebuilt_json["cards"].append(card)
-                print(f"[DEBUG] Successfully parsed card: {card.get('id', 'unknown')}")
-            except Exception as e:
-                print(f"[DEBUG] Failed to parse card: {str(e)}")
-                continue
-        
+        print(f"[DEBUG] Successfully rebuilt {len(cards)} cards from scrambled JSON")
         return json.dumps(rebuilt_json, ensure_ascii=False)
 
     async def generate_flashcards(self, words_data: List[Dict], session_config: Dict[str, Any]) -> Dict[str, Any]:
