@@ -431,41 +431,24 @@ Ne retourne AUCUN autre texte que le JSON.
         card_type = available_types[0] if len(available_types) == 1 else "classic"
         
         if card_type == "contextual":
-            prompt = f"""Generate {target_count} contextual flashcards in JSON format:
+            prompt = f"""Generate exactly {target_count} contextual flashcards. MUST generate ALL {target_count} cards.
 
 Words: {', '.join([w['text'] for w in selected_words])}
-Type: contextual fill-in-blank cards
 
-Return ONLY valid JSON with this exact structure:
+JSON format - generate card_1, card_2, card_3, card_4, card_5:
 {{
   "sessionId": "session_123",
   "cards": [
-    {{
-      "id": "card_1",
-      "wordId": "word_hello",
-      "type": "contextual",
-      "subType": "fill_in_blank",
-      "question": "Complete the sentence: 'I want to say _____ to everyone'",
-      "answer": "hello",
-      "options": ["hello", "goodbye", "thanks", "sorry"],
-      "hints": ["greeting word"],
-      "explanation": "Hello is a common greeting",
-      "difficulty": "easy",
-      "timeLimit": 15000,
-      "points": 10,
-      "questionLanguage": "en",
-      "answerLanguage": "en",
-      "contextTranslation": "Je veux dire bonjour à tout le monde"
-    }}
+    {{"id": "card_1", "wordId": "{selected_words[0]['text']}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'The _____ was amazing'", "answer": "{selected_words[0]['text']}", "options": ["{selected_words[0]['text']}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
+    {{"id": "card_2", "wordId": "{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'I need _____'", "answer": "{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "options": ["{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
+    {{"id": "card_3", "wordId": "{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'The _____ is important'", "answer": "{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "options": ["{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
+    {{"id": "card_4", "wordId": "{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'We found _____'", "answer": "{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "options": ["{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
+    {{"id": "card_5", "wordId": "{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'They use _____'", "answer": "{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "options": ["{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}}
   ],
-  "metadata": {{
-    "totalCards": {target_count},
-    "estimatedTime": {target_count * 15},
-    "difficultyMix": {{"easy": {target_count}, "medium": 0, "hard": 0}}
-  }}
+  "metadata": {{"totalCards": {target_count}, "estimatedTime": {target_count * 15}, "difficultyMix": {{"easy": {target_count}, "medium": 0, "hard": 0}}}}
 }}
 
-NO explanatory text. ONLY JSON."""
+IMPORTANT: Generate ALL {target_count} cards. Do not stop at 3."""
         else:
             prompt = f"""
 Génère {target_count} flashcards CLASSIC pour l'apprentissage {source_lang} → {target_lang}.
