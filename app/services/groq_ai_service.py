@@ -1,6 +1,7 @@
 """Groq API Service for fast, free AI inference."""
-from typing import Dict, Any, List
 import json
+from typing import Dict, List, Any
+from groq import AsyncGroq
 import httpx
 from app.core.config import settings
 

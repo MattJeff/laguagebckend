@@ -7,6 +7,7 @@ python-dotenv==1.0.0
 pydantic-settings==2.1.0
 ollama>=0.3.0
 openai>=1.0.0
+groq>=0.4.1
 # mlx-lm>=0.18.0  # Only for Apple Silicon - causes Railway deployment failures
 pytest==7.4.3
 pytest-asyncio==0.21.1
