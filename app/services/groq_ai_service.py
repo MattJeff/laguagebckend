@@ -35,7 +35,7 @@ class GroqService:
         payload = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 500,
+            "max_tokens": 2000,
             "temperature": 0.3
         }
         
