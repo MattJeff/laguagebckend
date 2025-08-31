@@ -264,7 +264,107 @@ Ne retourne AUCUN autre texte que le JSON.
         # Fix missing commas after string values when followed by quotes
         json_str = re.sub(r'"\s*"([^"]*)":', r'","\1":', json_str)
         
+        # Fix malformed structure - remove orphaned values and fix property order
+        lines = json_str.split('\n')
+        fixed_lines = []
+        in_object = False
+        in_array = False
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+                
+            # Track object/array state
+            if '{' in line:
+                in_object = True
+            if '}' in line:
+                in_object = False
+            if '[' in line:
+                in_array = True
+            if ']' in line:
+                in_array = False
+                
+            # Skip orphaned values (strings not part of key-value pairs)
+            if in_object and '"' in line and ':' not in line and not line.endswith(',') and not line.endswith('{') and not line.endswith('}'):
+                continue
+                
+            fixed_lines.append(line)
+        
+        json_str = '\n'.join(fixed_lines)
+        
+        # Final cleanup - ensure proper comma placement
+        json_str = re.sub(r'"\s*\n\s*"', '",\n"', json_str)
+        json_str = re.sub(r'}\s*\n\s*"', '},\n"', json_str)
+        json_str = re.sub(r']\s*\n\s*"', '],\n"', json_str)
+        
         return json_str
+    
+    def _rebuild_json_structure(self, json_str: str) -> str:
+        """Rebuild JSON structure from scrambled Groq response"""
+        import re
+        
+        # Extract all key-value pairs
+        session_id_match = re.search(r'"sessionId":\s*"([^"]*)"', json_str)
+        
+        # Extract cards array content
+        cards_start = json_str.find('"cards"')
+        if cards_start == -1:
+            return json_str
+            
+        # Find the opening bracket for cards array
+        bracket_start = json_str.find('[', cards_start)
+        if bracket_start == -1:
+            return json_str
+            
+        # Find all card objects
+        card_objects = []
+        current_pos = bracket_start + 1
+        brace_count = 0
+        current_card = ""
+        
+        for i, char in enumerate(json_str[current_pos:], current_pos):
+            if char == '{':
+                if brace_count == 0:
+                    current_card = char
+                else:
+                    current_card += char
+                brace_count += 1
+            elif char == '}':
+                current_card += char
+                brace_count -= 1
+                if brace_count == 0:
+                    card_objects.append(current_card)
+                    current_card = ""
+            elif brace_count > 0:
+                current_card += char
+            elif char == ']':
+                break
+        
+        # Rebuild the JSON structure
+        session_id = session_id_match.group(1) if session_id_match else "session_generated"
+        
+        rebuilt_json = {
+            "sessionId": session_id,
+            "cards": [],
+            "metadata": {
+                "totalCards": len(card_objects),
+                "estimatedTime": len(card_objects) * 15,
+                "difficultyMix": {"easy": len(card_objects), "medium": 0, "hard": 0}
+            }
+        }
+        
+        # Parse each card object
+        for card_str in card_objects:
+            try:
+                # Fix the card JSON
+                card_str = self._fix_json_syntax(card_str)
+                card = json.loads(card_str)
+                rebuilt_json["cards"].append(card)
+            except:
+                continue
+        
+        return json.dumps(rebuilt_json, ensure_ascii=False)
 
     async def generate_flashcards(self, words_data: List[Dict], session_config: Dict[str, Any]) -> Dict[str, Any]:
         """Generate flashcards using Groq with same interface as MLX"""
@@ -405,10 +505,16 @@ RETOURNE UNIQUEMENT LE JSON VALIDE SANS AUCUN TEXTE EXPLICATIF AVANT OU APRÈS.
                 if start != -1 and end > start:
                     response_clean = response_clean[start:end]
             
+            print(f"[DEBUG] Raw extracted JSON: {response_clean[:500]}...")
+            
+            # Try to rebuild JSON from scrambled structure
+            if '"cards"' in response_clean and '"sessionId"' in response_clean:
+                response_clean = self._rebuild_json_structure(response_clean)
+            
             # Fix common JSON syntax errors
             response_clean = self._fix_json_syntax(response_clean)
             
-            print(f"[DEBUG] Cleaned JSON: {response_clean}")
+            print(f"[DEBUG] Cleaned JSON: {response_clean[:500]}...")
             result = json.loads(response_clean)
             print(f"[DEBUG] Groq parsed successfully: {result}")
             
