@@ -78,9 +78,10 @@ async def health_check():
     service_info = AIServiceFactory.get_service_info()
     return {
         "status": "healthy", 
-        "service": "multilingual_ai_backend",
-        "ai_engine": service_info["selected_service"],
-        "timestamp": int(time.time())
+        "service": "multilingual_ai_backend", 
+        "ai_engine": ai_service.get_engine_name(), 
+        "timestamp": int(time.time()), 
+        "version": "2.1.1"
     }
 
 # === WORD ANALYSIS ENDPOINTS ===
