@@ -27,7 +27,7 @@ class MLXAIService:
             self.model = None
             self.tokenizer = None
     
-    def _generate_response(self, prompt: str, max_tokens: int = 1024) -> str:
+    def _generate_response(self, prompt: str, max_tokens: int = 2000) -> str:
         """Generate response using MLX-LM"""
         if not self.model or not self.tokenizer:
             raise Exception("MLX model not loaded")

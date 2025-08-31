@@ -35,7 +35,7 @@ class GroqService:
         payload = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 1500,
+            "max_tokens": 8000,
             "temperature": 0.3
         }
         
@@ -529,11 +529,10 @@ NO explanatory text. ONLY JSON."""
             
             # Validate and fix None values in cards
             if "cards" in result and isinstance(result["cards"], list):
-                # Limit to requested count if too many cards generated
-                if len(result["cards"]) > target_count:
-                    print(f"[DEBUG] Groq generated {len(result['cards'])} cards, limiting to {target_count}")
-                    result["cards"] = result["cards"][:target_count]
-                    result["metadata"]["totalCards"] = target_count
+                # Update metadata with actual card count
+                actual_count = len(result["cards"])
+                result["metadata"]["totalCards"] = actual_count
+                result["metadata"]["estimatedTime"] = actual_count * 15
                 
                 for i, card in enumerate(result["cards"]):
                     if not isinstance(card, dict):
@@ -549,25 +548,37 @@ NO explanatory text. ONLY JSON."""
                         word_text = card.get("wordId", f"word_{i+1}").replace("word_", "")
                         card["question"] = f"Que signifie '{word_text}' ?" if word_text else f"Question {i+1}"
                     
-                    # Fix None options
+                    # Fix None options with better distractors
                     if card.get("options") is None or not isinstance(card.get("options"), list) or len(card.get("options", [])) == 0:
-                        card["options"] = [
-                            card.get("answer", f"Réponse {i+1}"),
-                            "Option incorrecte 1",
-                            "Option incorrecte 2", 
-                            "Option incorrecte 3"
-                        ]
+                        answer = card.get("answer", "")
+                        if card.get("type") == "contextual":
+                            distractors = self._get_contextual_distractors(answer)
+                            card["options"] = [answer] + distractors[:3]
+                        else:
+                            card["options"] = [
+                                card.get("answer", f"Réponse {i+1}"),
+                                "Option incorrecte 1",
+                                "Option incorrecte 2", 
+                                "Option incorrecte 3"
+                            ]
                     else:
-                        # Fix individual None values in options and ensure 4 options
-                        options = card["options"]
-                        for j in range(len(options)):
-                            if options[j] is None or options[j] == "":
-                                options[j] = f"Option {j+1}"
-                        
-                        # Ensure we have exactly 4 options
-                        while len(options) < 4:
-                            options.append(f"Option {len(options)+1}")
-                        card["options"] = options[:4]  # Limit to 4 options
+                        # Replace generic options with better distractors
+                        if any("option" in str(opt).lower() for opt in card.get("options", [])):
+                            answer = card.get("answer", "")
+                            if card.get("type") == "contextual":
+                                distractors = self._get_contextual_distractors(answer)
+                                card["options"] = [answer] + distractors[:3]
+                        else:
+                            # Fix individual None values in options and ensure 4 options
+                            options = card["options"]
+                            for j in range(len(options)):
+                                if options[j] is None or options[j] == "":
+                                    options[j] = f"Option {j+1}"
+                            
+                            # Ensure we have exactly 4 options
+                            while len(options) < 4:
+                                options.append(f"Option {len(options)+1}")
+                            card["options"] = options[:4]  # Limit to 4 options
                     
                     # Fix other None values
                     if card.get("hints") is None:
