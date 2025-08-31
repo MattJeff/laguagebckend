@@ -655,6 +655,11 @@ NO explanatory text. ONLY JSON."""
                             while len(options) < 4:
                                 options.append(f"Option {len(options)+1}")
                             card["options"] = options[:4]  # Limit to 4 options
+                            
+                            # Randomize Groq-generated options so answer isn't always first
+                            import random
+                            random.shuffle(card["options"])
+                            print(f"[DEBUG] Shuffled Groq options for '{card.get('answer')}': {card['options']}")
                     
                     # Fix other None values
                     if card.get("hints") is None:
