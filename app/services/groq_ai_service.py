@@ -630,8 +630,11 @@ NO explanatory text. ONLY JSON."""
                                 "Option incorrecte 3"
                             ]
                     else:
-                        # Replace generic options with better distractors
-                        if any("option" in str(opt).lower() or "incorrecte" in str(opt).lower() for opt in card.get("options", [])):
+                        # Only replace truly generic/bad options, not good Groq-generated ones
+                        bad_options = ["option incorrecte", "something", "anything", "nothing", "option 1", "option 2", "option 3"]
+                        has_bad_options = any(any(bad in str(opt).lower() for bad in bad_options) for opt in card.get("options", []))
+                        
+                        if has_bad_options:
                             answer = card.get("answer", "")
                             if card.get("type") == "contextual":
                                 distractors = self._get_contextual_distractors(answer)
@@ -640,6 +643,7 @@ NO explanatory text. ONLY JSON."""
                                 import random
                                 random.shuffle(options)
                                 card["options"] = options
+                                print(f"[DEBUG] Replaced bad options for '{answer}' with: {options}")
                         else:
                             # Fix individual None values in options and ensure 4 options
                             options = card["options"]
