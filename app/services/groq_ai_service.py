@@ -234,6 +234,43 @@ Ne retourne AUCUN autre texte que le JSON.
         }
         return translations.get(word.lower(), f"traduction de {word}")
     
+    def _get_contextual_distractors(self, answer: str) -> List[str]:
+        """Generate contextual distractors for fill-in-blank questions"""
+        # Contextual distractors based on word type and context
+        common_distractors = {
+            "think": ["believe", "know", "feel"],
+            "arm": ["hand", "leg", "foot"],
+            "decaf": ["regular", "strong", "black"],
+            "of": ["from", "with", "by"],
+            "don't": ["can't", "won't", "shouldn't"],
+            "motto": ["slogan", "phrase", "saying"],
+            "tiger": ["lion", "leopard", "panther"],
+            "tear": ["rip", "break", "cut"],
+            "bored": ["tired", "excited", "happy"],
+            "hello": ["goodbye", "thanks", "sorry"],
+            "world": ["planet", "earth", "globe"],
+            "love": ["hate", "like", "enjoy"],
+            "book": ["magazine", "newspaper", "novel"],
+            "water": ["juice", "milk", "coffee"],
+            "groaning": ["moaning", "crying", "shouting"],
+            "brainless": ["mindless", "thoughtless", "careless"],
+            "fantasy": ["reality", "dream", "story"],
+            "applause": ["silence", "booing", "cheering"]
+        }
+        
+        if answer.lower() in common_distractors:
+            return common_distractors[answer.lower()]
+        else:
+            # Better generic distractors based on word length and type
+            if len(answer) <= 4:
+                return ["word", "item", "thing"]
+            elif answer.endswith("ing"):
+                return ["running", "walking", "talking"]
+            elif answer.endswith("ed"):
+                return ["played", "worked", "lived"]
+            else:
+                return ["something", "anything", "nothing"]
+
     def _get_distractor_option(self, word: str, index: int) -> str:
         """Generate realistic distractor options"""
         distractors = [
@@ -553,7 +590,11 @@ NO explanatory text. ONLY JSON."""
                         answer = card.get("answer", "")
                         if card.get("type") == "contextual":
                             distractors = self._get_contextual_distractors(answer)
-                            card["options"] = [answer] + distractors[:3]
+                            options = [answer] + distractors[:3]
+                            # Randomize order so answer isn't always first
+                            import random
+                            random.shuffle(options)
+                            card["options"] = options
                         else:
                             card["options"] = [
                                 card.get("answer", f"Réponse {i+1}"),
@@ -563,11 +604,15 @@ NO explanatory text. ONLY JSON."""
                             ]
                     else:
                         # Replace generic options with better distractors
-                        if any("option" in str(opt).lower() for opt in card.get("options", [])):
+                        if any("option" in str(opt).lower() or "incorrecte" in str(opt).lower() for opt in card.get("options", [])):
                             answer = card.get("answer", "")
                             if card.get("type") == "contextual":
                                 distractors = self._get_contextual_distractors(answer)
-                                card["options"] = [answer] + distractors[:3]
+                                options = [answer] + distractors[:3]
+                                # Randomize order so answer isn't always first
+                                import random
+                                random.shuffle(options)
+                                card["options"] = options
                         else:
                             # Fix individual None values in options and ensure 4 options
                             options = card["options"]
