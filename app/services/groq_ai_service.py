@@ -255,7 +255,12 @@ Ne retourne AUCUN autre texte que le JSON.
             "groaning": ["moaning", "crying", "shouting"],
             "brainless": ["mindless", "thoughtless", "careless"],
             "fantasy": ["reality", "dream", "story"],
-            "applause": ["silence", "booing", "cheering"]
+            "applause": ["silence", "booing", "cheering"],
+            "understand": ["comprehend", "realize", "grasp"],
+            "uptight": ["tense", "nervous", "stressed"],
+            "chatter": ["noise", "talk", "conversation"],
+            "wilderness": ["forest", "nature", "countryside"],
+            "battlefield": ["warzone", "conflict", "combat"]
         }
         
         if answer.lower() in common_distractors:
@@ -269,7 +274,29 @@ Ne retourne AUCUN autre texte que le JSON.
             elif answer.endswith("ed"):
                 return ["played", "worked", "lived"]
             else:
-                return ["something", "anything", "nothing"]
+                # Generate diverse distractors based on word characteristics
+                import random
+                
+                # Different distractor pools to avoid repetition
+                general_words = ["place", "time", "person", "thing", "way", "part", "group", "number", "point", "work", "life", "fact", "hand", "eye", "day", "man", "woman", "child", "world", "school", "state", "family", "student", "group", "country", "problem", "service", "room", "friend", "area", "money", "story", "result", "change", "lot", "right", "study", "book", "job", "word", "business", "issue", "side", "kind", "head", "house", "system", "program", "question", "government", "company"]
+                
+                action_words = ["running", "walking", "talking", "working", "playing", "reading", "writing", "thinking", "looking", "moving", "helping", "learning", "teaching", "building", "creating", "making", "doing", "going", "coming", "staying"]
+                
+                descriptive_words = ["important", "different", "possible", "available", "necessary", "interesting", "difficult", "simple", "common", "special", "clear", "sure", "ready", "free", "able", "strong", "quick", "slow", "big", "small"]
+                
+                # Choose appropriate pool based on word type
+                if answer.endswith("ing"):
+                    pool = action_words
+                elif len(answer) > 8:  # Longer words get general words
+                    pool = general_words
+                elif answer.isalpha() and answer.islower():
+                    pool = descriptive_words
+                else:
+                    pool = general_words
+                
+                # Select 3 random distractors from the pool
+                selected = random.sample(pool, min(3, len(pool)))
+                return selected
 
     def _get_distractor_option(self, word: str, index: int) -> str:
         """Generate realistic distractor options"""
