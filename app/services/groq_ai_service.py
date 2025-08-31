@@ -300,7 +300,7 @@ Ne retourne AUCUN autre texte que le JSON.
         
         return json_str
     
-    def _rebuild_json_structure(self, json_str: str) -> str:
+    def _rebuild_json_structure(self, json_str: str, target_count: int = 5) -> str:
         """Rebuild JSON structure from scrambled Groq response"""
         import re
         
@@ -313,6 +313,8 @@ Ne retourne AUCUN autre texte que le JSON.
         
         # Find all card IDs to determine how many cards we have
         card_ids = re.findall(r'"id":\s*"(card_\d+)"', json_str)
+        print(f"[DEBUG] Found card IDs in JSON: {card_ids}")
+        print(f"[DEBUG] Expected {target_count} cards, found {len(card_ids)} card IDs")
         
         for card_id in card_ids:
             card = {"id": card_id}
@@ -375,6 +377,9 @@ Ne retourne AUCUN autre texte que le JSON.
         }
         
         print(f"[DEBUG] Successfully rebuilt {len(cards)} cards from scrambled JSON")
+        print(f"[DEBUG] Expected {target_count} cards, got {len(cards)} cards")
+        if len(cards) < target_count:
+            print(f"[DEBUG] Missing {target_count - len(cards)} cards - Groq may have generated incomplete JSON")
         return json.dumps(rebuilt_json, ensure_ascii=False)
 
     async def generate_flashcards(self, words_data: List[Dict], session_config: Dict[str, Any]) -> Dict[str, Any]:
@@ -530,7 +535,7 @@ NO explanatory text. ONLY JSON."""
             
             # Try to rebuild JSON from scrambled structure
             if '"cards"' in response_clean and '"sessionId"' in response_clean:
-                response_clean = self._rebuild_json_structure(response_clean)
+                response_clean = self._rebuild_json_structure(response_clean, target_count)
             
             # Fix common JSON syntax errors
             response_clean = self._fix_json_syntax(response_clean)
