@@ -458,29 +458,39 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
 Génère {target_count} flashcards CLASSIC pour l'apprentissage {source_lang} → {target_lang}.
 Niveau utilisateur: {user_level}
 
-MOTS À TRAITER:
-{words_list}
+Words: {', '.join([w['text'] for w in selected_words])}
+Type: classic translation cards
+Source: English → French
 
-TYPE: CLASSIC UNIQUEMENT - Traduction simple
-- Question: "Que signifie 'word' en français ?"
-- Answer: traduction française
-- Options: [traduction correcte, distracteur1, distracteur2, distracteur3]
-- type: "classic"
-- questionLanguage: "en"
-- answerLanguage: "fr"
+Return ONLY valid JSON with this exact structure:
+{{
+  "sessionId": "session_123",
+  "cards": [
+    {{
+      "id": "card_1",
+      "wordId": "word_hello",
+      "type": "classic",
+      "subType": "translation_to_target",
+      "question": "Que signifie 'hello' ?",
+      "answer": "bonjour",
+      "options": ["bonjour", "salut", "bonsoir", "bonne nuit"],
+      "hints": ["greeting"],
+      "explanation": "Common greeting",
+      "difficulty": "easy",
+      "timeLimit": 15000,
+      "points": 10,
+      "questionLanguage": "en",
+      "answerLanguage": "fr"
+    }}
+  ],
+  "metadata": {{
+    "totalCards": {target_count},
+    "estimatedTime": {target_count * 15},
+    "difficultyMix": {{"easy": {target_count}, "medium": 0, "hard": 0}}
+  }}
+}}
 
-SCHÉMA:
-{json.dumps(schema, indent=2, ensure_ascii=False)}
-
-RÈGLES:
-- TOUTES les cartes type="classic"
-- Questions de traduction directe
-- Answer en français
-- questionLanguage="en", answerLanguage="fr"
-- Aucun champ null
-
-RETOURNE UNIQUEMENT LE JSON VALIDE SANS AUCUN TEXTE EXPLICATIF AVANT OU APRÈS.
-"""
+NO explanatory text. ONLY JSON."""
         
         try:
             print(f"[DEBUG] Sending prompt to Groq: {prompt[:200]}...")
