@@ -11,8 +11,13 @@ class GroqService:
     def __init__(self):
         self.api_key = settings.GROQ_API_KEY
         self.model = settings.GROQ_MODEL
+        self.client = AsyncGroq(api_key=self.api_key)
         self.fallback_model = settings.GROQ_FALLBACK_MODEL
         self.base_url = "https://api.groq.com/openai/v1"
+    
+    def get_engine_name(self) -> str:
+        """Return the engine name for health checks"""
+        return "Groq"
     
     async def _generate_completion(self, prompt: str, system_prompt: str = "") -> str:
         """Generate completion using Groq API"""
