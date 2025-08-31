@@ -418,41 +418,41 @@ Ne retourne AUCUN autre texte que le JSON.
         card_type = available_types[0] if len(available_types) == 1 else "classic"
         
         if card_type == "contextual":
-            prompt = f"""
-Génère {target_count} flashcards CONTEXTUAL pour l'apprentissage {source_lang} → {target_lang}.
-Niveau utilisateur: {user_level}
+            prompt = f"""Generate {target_count} contextual flashcards in JSON format:
 
-MOTS À TRAITER:
-{words_list}
+Words: {', '.join([w['text'] for w in selected_words])}
+Type: contextual fill-in-blank cards
 
-TYPE: CONTEXTUAL UNIQUEMENT - Complétion de phrase
-- Question: "Complete the sentence: 'phrase avec _____'"
-- OBLIGATOIRE: La question DOIT contenir _____ à la place du mot cible
-- Answer: le mot anglais original
-- Options: [mot correct, distracteur1, distracteur2, distracteur3] TOUS EN ANGLAIS
-- type: "contextual"
-- questionLanguage: "en"
-- answerLanguage: "en"
-- contextTranslation: traduction française de la phrase complète
+Return ONLY valid JSON with this exact structure:
+{{
+  "sessionId": "session_123",
+  "cards": [
+    {{
+      "id": "card_1",
+      "wordId": "word_hello",
+      "type": "contextual",
+      "subType": "fill_in_blank",
+      "question": "Complete the sentence: 'I want to say _____ to everyone'",
+      "answer": "hello",
+      "options": ["hello", "goodbye", "thanks", "sorry"],
+      "hints": ["greeting word"],
+      "explanation": "Hello is a common greeting",
+      "difficulty": "easy",
+      "timeLimit": 15000,
+      "points": 10,
+      "questionLanguage": "en",
+      "answerLanguage": "en",
+      "contextTranslation": "Je veux dire bonjour à tout le monde"
+    }}
+  ],
+  "metadata": {{
+    "totalCards": {target_count},
+    "estimatedTime": {target_count * 15},
+    "difficultyMix": {{"easy": {target_count}, "medium": 0, "hard": 0}}
+  }}
+}}
 
-EXEMPLES:
-Question: "Complete the sentence: 'I couldn't see her _____ in the crowd'"
-Answer: "face"
-Options: ["face", "hand", "voice", "smile"]
-contextTranslation: "Je ne pouvais pas voir son visage dans la foule"
-
-SCHÉMA:
-{json.dumps(schema, indent=2, ensure_ascii=False)}
-
-RÈGLES:
-- TOUTES les cartes type="contextual"
-- Questions avec _____ OBLIGATOIRE
-- Answer en anglais
-- questionLanguage="en", answerLanguage="en"
-- Aucun champ null
-
-RETOURNE UNIQUEMENT LE JSON VALIDE.
-"""
+NO explanatory text. ONLY JSON."""
         else:
             prompt = f"""
 Génère {target_count} flashcards CLASSIC pour l'apprentissage {source_lang} → {target_lang}.
