@@ -67,7 +67,7 @@ class GroqService:
         }
         
         prompt = f"""
-Analyse le mot anglais "{word}" dans ce contexte : "{context}" pour des apprenants français.
+Analyse le mot anglais "{word}" dans ce contexte : "{context}" pour des apprenants {langue_output}.
 {level_guidance}
 
 Produis un objet JSON conforme au schéma suivant. Toutes les clés doivent être renseignées.
@@ -354,8 +354,10 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
         try:
             print(f"[DEBUG] Sending prompt to Groq: {prompt[:200]}...")
             response = await self._generate_completion(prompt, "")
-            print(f"[DEBUG] Groq response: {response[:500]}...")
+            print(f"[DEBUG] Groq RAW response: {response}")
+            print(f"[DEBUG] Attempting to parse JSON...")
             result = json.loads(response)
+            print(f"[DEBUG] Groq parsed successfully: {result}")
             
             # Validate and fix None values in cards
             if "cards" in result and isinstance(result["cards"], list):
@@ -414,6 +416,11 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
             return result
         except Exception as e:
             print(f"[ERROR] Groq failed: {str(e)}")
+            print(f"[ERROR] Exception type: {type(e).__name__}")
+            print(f"[ERROR] Full traceback:")
+            import traceback
+            traceback.print_exc()
+            print(f"[FALLBACK] Using fallback generation...")
             # Fallback response matching MLX format
             import uuid
             fallback_cards = []
@@ -467,13 +474,16 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
                     }
                 fallback_cards.append(card)
             
+            print(f"[FALLBACK] Generated {len(fallback_cards)} fallback cards")
             return {
-                "sessionId": f"session_{uuid.uuid4().hex[:8]}",
+                "sessionId": str(uuid.uuid4()),
                 "cards": fallback_cards,
                 "metadata": {
                     "totalCards": len(fallback_cards),
                     "estimatedTime": len(fallback_cards) * 15,
                     "difficultyMix": {"easy": len(fallback_cards), "medium": 0, "hard": 0}
                 },
-                "error": None
+                "error": None,
+                "fallback": True,
+                "source": "fallback"
             }
