@@ -35,7 +35,7 @@ class GroqService:
         payload = {
             "model": self.model,
             "messages": messages,
-            "max_tokens": 2000,
+            "max_tokens": 1500,
             "temperature": 0.3
         }
         
@@ -529,6 +529,12 @@ NO explanatory text. ONLY JSON."""
             
             # Validate and fix None values in cards
             if "cards" in result and isinstance(result["cards"], list):
+                # Limit to requested count if too many cards generated
+                if len(result["cards"]) > target_count:
+                    print(f"[DEBUG] Groq generated {len(result['cards'])} cards, limiting to {target_count}")
+                    result["cards"] = result["cards"][:target_count]
+                    result["metadata"]["totalCards"] = target_count
+                
                 for i, card in enumerate(result["cards"]):
                     if not isinstance(card, dict):
                         continue
@@ -565,9 +571,9 @@ NO explanatory text. ONLY JSON."""
                     
                     # Fix other None values
                     if card.get("hints") is None:
-                        card["hints"] = [f"Indice pour carte {i+1}"]
+                        card["hints"] = []
                     if card.get("explanation") is None:
-                        card["explanation"] = f"Explication pour carte {i+1}"
+                        card["explanation"] = ""
                     if card.get("difficulty") is None:
                         card["difficulty"] = "easy"
                     
