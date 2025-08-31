@@ -359,9 +359,12 @@ Ne retourne AUCUN autre texte que le JSON.
             try:
                 # Fix the card JSON
                 card_str = self._fix_json_syntax(card_str)
+                print(f"[DEBUG] Trying to parse card: {card_str}")
                 card = json.loads(card_str)
                 rebuilt_json["cards"].append(card)
-            except:
+                print(f"[DEBUG] Successfully parsed card: {card.get('id', 'unknown')}")
+            except Exception as e:
+                print(f"[DEBUG] Failed to parse card: {str(e)}")
                 continue
         
         return json.dumps(rebuilt_json, ensure_ascii=False)
