@@ -354,7 +354,7 @@ RÈGLES:
 - questionLanguage="en", answerLanguage="fr"
 - Aucun champ null
 
-RETOURNE UNIQUEMENT LE JSON VALIDE.
+RETOURNE UNIQUEMENT LE JSON VALIDE SANS AUCUN TEXTE EXPLICATIF AVANT OU APRÈS.
 """
         
         try:
@@ -362,7 +362,29 @@ RETOURNE UNIQUEMENT LE JSON VALIDE.
             response = await self._generate_completion(prompt, "")
             print(f"[DEBUG] Groq RAW response: {response}")
             print(f"[DEBUG] Attempting to parse JSON...")
-            result = json.loads(response)
+            
+            # Extract JSON from response if it contains explanatory text
+            response_clean = response.strip()
+            if response_clean.startswith('```json'):
+                # Extract JSON from markdown code block
+                start = response_clean.find('{')
+                end = response_clean.rfind('}') + 1
+                if start != -1 and end > start:
+                    response_clean = response_clean[start:end]
+            elif response_clean.startswith('{'):
+                # Find the end of JSON object
+                end = response_clean.rfind('}') + 1
+                if end > 0:
+                    response_clean = response_clean[:end]
+            else:
+                # Try to find JSON object in the response
+                start = response_clean.find('{')
+                end = response_clean.rfind('}') + 1
+                if start != -1 and end > start:
+                    response_clean = response_clean[start:end]
+            
+            print(f"[DEBUG] Cleaned JSON: {response_clean}")
+            result = json.loads(response_clean)
             print(f"[DEBUG] Groq parsed successfully: {result}")
             
             # Validate and fix None values in cards
