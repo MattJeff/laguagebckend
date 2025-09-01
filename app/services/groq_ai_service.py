@@ -495,24 +495,32 @@ Ne retourne AUCUN autre texte que le JSON.
         card_type = available_types[0] if len(available_types) == 1 else "classic"
         
         if card_type == "contextual":
-            prompt = f"""Generate exactly {target_count} contextual flashcards. MUST generate ALL {target_count} cards.
+            prompt = f"""Generate exactly {target_count} contextual fill-in-the-blank flashcards for English vocabulary learning.
 
-Words: {', '.join([w['text'] for w in selected_words])}
+CRITICAL INSTRUCTIONS:
+1. Create realistic, grammatically correct sentences with the target word missing
+2. Generate 3 REALISTIC alternative words for each "options" array (NOT generic placeholders)
+3. Options should be semantically related words that could plausibly fit the sentence
+4. NEVER use placeholders like "option1", "option2", "generate option", etc.
 
-JSON format - generate card_1, card_2, card_3, card_4, card_5:
+Words to create cards for: {', '.join([w['text'] for w in selected_words])}
+
+Example of GOOD options:
+- For "applause": ["applause", "silence", "booing", "cheering"] 
+- For "tiger": ["tiger", "lion", "leopard", "panther"]
+- For "running": ["running", "walking", "jogging", "sprinting"]
+
+Return ONLY valid JSON:
 {{
   "sessionId": "session_123",
   "cards": [
-    {{"id": "card_1", "wordId": "{selected_words[0]['text']}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'The _____ was amazing'", "answer": "{selected_words[0]['text']}", "options": ["{selected_words[0]['text']}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
-    {{"id": "card_2", "wordId": "{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'I need _____'", "answer": "{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "options": ["{selected_words[1]['text'] if len(selected_words) > 1 else 'word2'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
-    {{"id": "card_3", "wordId": "{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'The _____ is important'", "answer": "{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "options": ["{selected_words[2]['text'] if len(selected_words) > 2 else 'word3'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
-    {{"id": "card_4", "wordId": "{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'We found _____'", "answer": "{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "options": ["{selected_words[3]['text'] if len(selected_words) > 3 else 'word4'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}},
-    {{"id": "card_5", "wordId": "{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete: 'They use _____'", "answer": "{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "options": ["{selected_words[4]['text'] if len(selected_words) > 4 else 'word5'}", "option2", "option3", "option4"], "hints": [], "explanation": "", "difficulty": "easy", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}}
+    {{"id": "card_1", "wordId": "{selected_words[0]['text']}", "type": "contextual", "subType": "fill_in_blank", "question": "Complete the sentence: 'The loud _____ echoed through the theater'", "answer": "{selected_words[0]['text']}", "options": ["{selected_words[0]['text']}", "silence", "whisper", "music"], "hints": [], "explanation": "", "difficulty": "medium", "timeLimit": 15000, "points": 10, "questionLanguage": "en", "answerLanguage": "en", "contextTranslation": ""}}
   ],
   "metadata": {{"totalCards": {target_count}, "estimatedTime": {target_count * 15}, "difficultyMix": {{"easy": {target_count}, "medium": 0, "hard": 0}}}}
 }}
 
-IMPORTANT: Generate ALL {target_count} cards. Do not stop at 3."""
+MUST generate ALL {target_count} cards with realistic contextual options. NO generic placeholders allowed."""
+
         else:
             prompt = f"""
 Génère {target_count} flashcards CLASSIC pour l'apprentissage {source_lang} → {target_lang}.
@@ -631,7 +639,7 @@ NO explanatory text. ONLY JSON."""
                             ]
                     else:
                         # Only replace truly generic/bad options, not good Groq-generated ones
-                        bad_options = ["option incorrecte", "something", "anything", "nothing", "option 1", "option 2", "option 3", "option2", "option3", "option4"]
+                        bad_options = ["option incorrecte", "something", "anything", "nothing", "option 1", "option 2", "option 3", "option2", "option3", "option4", "generate option"]
                         has_bad_options = any(any(bad in str(opt).lower() for bad in bad_options) for opt in card.get("options", []))
                         
                         if has_bad_options:
