@@ -631,7 +631,7 @@ NO explanatory text. ONLY JSON."""
                             ]
                     else:
                         # Only replace truly generic/bad options, not good Groq-generated ones
-                        bad_options = ["option incorrecte", "something", "anything", "nothing", "option 1", "option 2", "option 3"]
+                        bad_options = ["option incorrecte", "something", "anything", "nothing", "option 1", "option 2", "option 3", "option2", "option3", "option4"]
                         has_bad_options = any(any(bad in str(opt).lower() for bad in bad_options) for opt in card.get("options", []))
                         
                         if has_bad_options:
